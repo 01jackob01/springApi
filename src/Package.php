@@ -1,0 +1,104 @@
+<?php
+
+class Package
+{
+    /**
+     * @var string
+     */
+    private string $apiKey;
+
+    public function __construct(string $apiKey)
+    {
+        $this->apiKey = $apiKey;
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function newPackage(array $order, array $params)
+    {
+        NewPackage::validateNewPackageData($params, $order, $this->apiKey);
+
+        $ch = curl_init();
+        curl_setopt_array(
+            $ch,
+            [
+                CURLOPT_URL => "https://mtapi.net/?testMode=1",
+                CURLOPT_POST => '1',
+                CURLOPT_HEADER => "0",
+                CURLOPT_POSTFIELDS => $this->createNewPackagePostData($params, $order)
+            ]
+        );
+
+        curl_exec($ch);
+    }
+
+    public function packagePDF(string $trackingNumber)
+    {
+        PackagePDF::validatePackagePDFData($trackingNumber, $this->apiKey);
+
+        $ch = curl_init();
+        curl_setopt_array(
+            $ch,
+            [
+                CURLOPT_URL => "https://mtapi.net/?testMode=1",
+                CURLOPT_POST => '1',
+                CURLOPT_HEADER => "0",
+                CURLOPT_RETURNTRANSFER => 1,
+                CURLOPT_POSTFIELDS => $this->createPackagePDFPostData($trackingNumber)
+            ]
+        );
+        $response = curl_exec($ch);
+
+        $this->createLabelPDF($response, $trackingNumber);
+    }
+
+    private function createLabelPDF(string $response, string $trackingNumber)
+    {
+        $file = TEMP_FILES . "label_" . $trackingNumber . ".pdf";
+        $decodedResponse = json_decode($response);
+        if ($decodedResponse->ErrorLevel === 0) {
+            $myfile = fopen($file, "w");
+            fwrite($myfile, base64_decode($decodedResponse->Shipment->LabelImage));
+            fclose($myfile);
+
+            header("Content-type: application/pdf");
+            header("Content-Length: " . filesize($file));
+            readfile($file);
+        } else {
+            echo json_encode([
+                'ErrorLevel'    => $decodedResponse->ErrorLevel,
+                'Error' => $decodedResponse->Error,
+            ]);
+        }
+    }
+
+    private function createNewPackagePostData(array $params, array $order)
+    {
+        $shipmentData["Apikey"] = $this->apiKey;
+        $shipmentData["Command"] = "OrderShipment";
+        foreach ($params as $key => $val) {
+            $shipmentData['Shipment'][NewPackage::getShipmentApiName($key)] = $val;
+        }
+        foreach ($order as $key => $val) {
+            $type = explode("_", $key);
+            if ($type[0] == 'sender') {
+                $shipmentData['Shipment']['ConsignorAddress'][NewPackage::getSenderApiName($key)] = $val;
+            } elseif ($type[0] == 'delivery') {
+                $shipmentData['Shipment']['ConsigneeAddress'][NewPackage::getDeliveryApiName($key)] = $val;
+            }
+        }
+
+        return json_encode($shipmentData);
+    }
+
+    private function createPackagePDFPostData(string $trackingNumber)
+    {
+        $packagePDF['Apikey'] = $this->apiKey;
+        $packagePDF['Command'] = 'GetShipmentLabel';
+        $packagePDF['Shipment']['LabelFormat'] = 'PDF';
+        $packagePDF['Shipment']['TrackingNumber'] = $trackingNumber;
+
+        return json_encode($packagePDF);
+    }
+}
