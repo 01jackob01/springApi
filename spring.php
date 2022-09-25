@@ -1,32 +1,31 @@
 <?php
 
+require 'vendor/autoload.php';
+use Src\Package;
+use ApiData\NewPackage;
+
 define("TEMP_FILES", "tmpFile/");
 
-spl_autoload_register(function ($class_name) {
-    include_once 'src/' . $class_name . '.php';
-    include_once 'apiData/' . $class_name . '.php';
-});
-
-if (isset($_REQUEST['www_request'])) {
+if (isset($_GET['www_request'])) {
     $params['api_key'] = '<api_key>';
-    if ($_REQUEST['api'] == 'new_package') {
+    if ($_GET['api'] == 'new_package') {
         foreach (NewPackage::SHIPMENT_COMMANDS as $key => $option) {
-            if (isset($_REQUEST[$key]) && !empty($_REQUEST[$key])) {
-                $params[$key] = $_REQUEST[$key];
+            if (isset($_GET[$key]) && !empty($_GET[$key])) {
+                $params[$key] = $_GET[$key];
             }
         }
         foreach (NewPackage::CONSIGNOR_ADDRESS_COMMANDS as $key => $option) {
-            if (isset($_REQUEST[$key]) && !empty($_REQUEST[$key])) {
-                $order[$key] = $_REQUEST[$key];
+            if (isset($_GET[$key]) && !empty($_GET[$key])) {
+                $order[$key] = $_GET[$key];
             }
         }
         foreach (NewPackage::CONSIGNEE_ADDRESS_COMMANDS as $key => $option) {
-            if (isset($_REQUEST[$key]) && !empty($_REQUEST[$key])) {
-                $order[$key] = $_REQUEST[$key];
+            if (isset($_GET[$key]) && !empty($_GET[$key])) {
+                $order[$key] = $_GET[$key];
             }
         }
-    } elseif ($_REQUEST['api'] == 'get_label') {
-        $trackingNumber = $_REQUEST['tracking_number'];
+    } elseif ($_GET['api'] == 'get_label') {
+        $trackingNumber = $_GET['tracking_number'];
     }
 
 } else {
@@ -63,14 +62,17 @@ if (isset($_REQUEST['www_request'])) {
 }
 
 $package = new Package($params['api_key']);
-if ($_REQUEST['api'] == 'new_package') {
+if ($_GET['api'] == 'new_package') {
     $package->newPackage($order, $params);
-} elseif ($_REQUEST['api'] == 'get_label') {
+} elseif ($_GET['api'] == 'get_label') {
     $package->packagePDF($trackingNumber);
-} elseif ($_REQUEST['api'] == 'get_default_values') {
+} elseif ($_GET['api'] == 'get_default_values') {
     $defaultValues = ['params' => $params, 'order' => $order];
 } else {
-    echo 'Wrong API';
+    echo json_encode([
+        'ErrorLevel' => 404,
+        'Error'      => 'Wrong API',
+    ]);
 }
 
 // 1. Create courier object

@@ -1,5 +1,10 @@
 <?php
 
+namespace ApiData;
+
+use Exception;
+use Src\CheckApiKey;
+
 class PackagePDF
 {
     const SHIPMNET_COMMANDS = [

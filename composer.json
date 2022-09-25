@@ -1,0 +1,15 @@
+{
+  "autoload": {
+    "psr-4": {
+      "ApiData\\": "apiData/",
+      "Src\\": "src/"
+    }
+  },
+  "require": {
+    "phpunit/phpunit": "9.5.21",
+    "phpunit/php-code-coverage": "9.2.13",
+    "ext-xdebug": "*",
+    "ext-curl": "*",
+    "ext-json": "*"
+  }
+}

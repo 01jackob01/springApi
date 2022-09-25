@@ -1,5 +1,11 @@
 <?php
 
+namespace Src;
+
+use ApiData\NewPackage;
+use ApiData\PackagePDF;
+use Exception;
+
 class Package
 {
     /**
@@ -53,7 +59,7 @@ class Package
         $this->createLabelPDF($response, $trackingNumber);
     }
 
-    private function createLabelPDF(string $response, string $trackingNumber)
+    public function createLabelPDF(string $response, string $trackingNumber)
     {
         $file = TEMP_FILES . "label_" . $trackingNumber . ".pdf";
         $decodedResponse = json_decode($response);
@@ -67,17 +73,20 @@ class Package
             readfile($file);
         } else {
             echo json_encode([
-                'ErrorLevel'    => $decodedResponse->ErrorLevel,
-                'Error' => $decodedResponse->Error,
+                'ErrorLevel' => $decodedResponse->ErrorLevel,
+                'Error'      => $decodedResponse->Error,
             ]);
         }
     }
 
-    private function createNewPackagePostData(array $params, array $order)
+    public function createNewPackagePostData(array $params, array $order)
     {
         $shipmentData["Apikey"] = $this->apiKey;
         $shipmentData["Command"] = "OrderShipment";
         foreach ($params as $key => $val) {
+            if ($key = 'api_key') {
+                continue;
+            }
             $shipmentData['Shipment'][NewPackage::getShipmentApiName($key)] = $val;
         }
         foreach ($order as $key => $val) {
@@ -92,7 +101,7 @@ class Package
         return json_encode($shipmentData);
     }
 
-    private function createPackagePDFPostData(string $trackingNumber)
+    public function createPackagePDFPostData(string $trackingNumber)
     {
         $packagePDF['Apikey'] = $this->apiKey;
         $packagePDF['Command'] = 'GetShipmentLabel';

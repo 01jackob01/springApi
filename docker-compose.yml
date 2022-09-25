@@ -2,8 +2,9 @@ version: '3.1'
 
 services:
   web:
-    container_name: apache
-    image: php_app_img
+    container_name: server_api
+    image: server_api
+    restart: always
     ports:
       - "80:80"
     volumes:

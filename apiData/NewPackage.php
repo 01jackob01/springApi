@@ -1,5 +1,10 @@
 <?php
 
+namespace ApiData;
+
+use Exception;
+use Src\CheckApiKey;
+
 class NewPackage
 {
     const SHIPMENT_COMMANDS = [
@@ -84,32 +89,32 @@ class NewPackage
         return $requiredValues;
     }
 
-    public static function getAllShipmentOptions()
+    public static function getAllShipmentOptions(): array
     {
         return self::SHIPMENT_COMMANDS;
     }
 
-    public static function getShipmentApiName($key)
+    public static function getShipmentApiName(string $key): string
     {
         return self::SHIPMENT_COMMANDS[$key]['apiName'];
     }
 
-    public static function getAllSenderOptions()
+    public static function getAllSenderOptions(): array
     {
         return self::CONSIGNOR_ADDRESS_COMMANDS;
     }
 
-    public static function getSenderApiName($key)
+    public static function getSenderApiName(string $key): string
     {
         return self::CONSIGNOR_ADDRESS_COMMANDS[$key]['apiName'];
     }
 
-    public static function getAllDeliveryOptions()
+    public static function getAllDeliveryOptions(): array
     {
         return self::CONSIGNEE_ADDRESS_COMMANDS;
     }
 
-    public static function getDeliveryApiName($key)
+    public static function getDeliveryApiName(string $key): string
     {
         return self::CONSIGNEE_ADDRESS_COMMANDS[$key]['apiName'];
     }
@@ -129,7 +134,7 @@ class NewPackage
         }
     }
 
-    private static function validateShipmentData($params)
+    public static function validateShipmentData($params)
     {
         $requiredShipmentData = NewPackage::getAllRequiredValue('shipment');
 
@@ -139,13 +144,13 @@ class NewPackage
             }
         }
         foreach ($params as $key => $val) {
-            if (!NewPackage::getShipmentApiName($key) && $key != 'api_key') {
+            if ($key != 'api_key' && !NewPackage::getShipmentApiName($key)) {
                 throw new Exception("Invalid value '" . $key . "' in 'Shipment Object'", 400);
             }
         }
     }
 
-    private static function validateOrderData($order)
+    public static function validateOrderData($order)
     {
         $requiredSenderData = NewPackage::getAllRequiredValue('sender');
         $requiredDeliveryData = NewPackage::getAllRequiredValue('delivery');
